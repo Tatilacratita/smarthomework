@@ -115,7 +115,7 @@ const translations = {
       section3: {
         title: '3. Partajarea informațiilor',
         p1: 'Nu vindem, nu închiriem și nu partajăm datele dumneavoastră cu terțe părți.',
-        p2: 'Pentru anumite funcționalități esențiale (cum ar fi generarea de explicații prin AI), aplicația poate trimite doar textul dumneavoastră către un furnizor de servicii de AI (de exemplu, serverele OpenAI sau alte alternative). Acest transfer se face prin conexiuni securizate (HTTPS), iar textul este procesat fără a fi stocat permanent pe aceste servere. Nu asociem aceste cereri cu identitatea sau dispozitivul dumneavoastră.'
+        p2: 'Pentru anumite funcționalități esențiale (cum ar fi generarea de explicații prin AI), aplicația poate trimise doar textul dumneavoastră către un furnizor de servicii de AI (de exemplu, serverele OpenAI sau alte alternative). Acest transfer se face prin conexiuni securizate (HTTPS), iar textul este procesat fără a fi stocat permanent pe aceste servere. Nu asociem aceste cereri cu identitatea sau dispozitivul dumneavoastră.'
       },
       section4: {
         title: '4. Stocarea și securitatea datelor',
@@ -309,15 +309,32 @@ function translatePage() {
     let value = translations[currentLang];
 
     for (const k of keys) {
-      value = value[k];
+      if (value && value[k]) {
+        value = value[k];
+      } else {
+        value = null;
+        break;
+      }
     }
 
-    if (value) {
+    if (value && typeof value === 'string') {
       element.textContent = value;
     }
   });
 
   document.documentElement.lang = currentLang;
+  
+  // Actualizează și atributele alt și title pentru SVG-uri dacă este necesar
+  updateSvgAccessibility();
+}
+
+function updateSvgAccessibility() {
+  const svgs = document.querySelectorAll('svg');
+  svgs.forEach(svg => {
+    if (!svg.getAttribute('aria-label')) {
+      svg.setAttribute('aria-hidden', 'true');
+    }
+  });
 }
 
 function setupLanguageToggle() {
@@ -333,23 +350,23 @@ function setupLanguageToggle() {
 
     currentLang = currentLang === 'ro' ? 'en' : 'ro';
     translatePage();
+    
+    // Salvează preferința în localStorage
+    localStorage.setItem('preferredLang', currentLang);
   });
 }
 
 function setupScrollAnimations() {
-  const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-  };
-
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
+        entry.target.classList.add('visible');
       }
     });
-  }, observerOptions);
+  }, { 
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  });
 
   const animatedElements = document.querySelectorAll('.fade-in');
   animatedElements.forEach(el => observer.observe(el));
@@ -359,7 +376,9 @@ function setupSmoothScroll() {
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
       e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
+      const targetId = this.getAttribute('href');
+      const target = document.querySelector(targetId);
+      
       if (target) {
         const headerOffset = 80;
         const elementPosition = target.getBoundingClientRect().top;
@@ -374,8 +393,83 @@ function setupSmoothScroll() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function setupNavigation() {
+  // Highlight active navigation link
+  const navLinks = document.querySelectorAll('.nav-link');
+  const currentPage = window.location.pathname;
+  
+  navLinks.forEach(link => {
+    if (link.getAttribute('href') === currentPage) {
+      link.style.color = 'var(--primary)';
+      link.style.fontWeight = '600';
+    }
+  });
+}
+
+function setupStoreButtons() {
+  const storeButtons = document.querySelectorAll('.store-button');
+  
+  storeButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Aici poți adăuga logica pentru redirecționare către App Store/Google Play
+      alert('Link-urile către App Store și Google Play vor fi adăugate când aplicația va fi publicată.');
+    });
+  });
+}
+
+function loadPreferredLanguage() {
+  const savedLang = localStorage.getItem('preferredLang');
+  if (savedLang && (savedLang === 'ro' || savedLang === 'en')) {
+    currentLang = savedLang;
+    
+    // Actualizează butonul de limbă
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle) {
+      const langOptions = langToggle.querySelectorAll('.lang-option');
+      langOptions.forEach(option => {
+        option.classList.toggle('active', option.getAttribute('data-lang') === currentLang);
+      });
+    }
+  }
+}
+
+function initializeApp() {
+  loadPreferredLanguage();
   setupLanguageToggle();
   setupScrollAnimations();
   setupSmoothScroll();
+  setupNavigation();
+  setupStoreButtons();
+  translatePage();
+  
+  // Animați inițiale pentru elementele deja în viewport
+  setTimeout(() => {
+    const elementsInViewport = document.querySelectorAll('.fade-in');
+    elementsInViewport.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom >= 0) {
+        el.classList.add('visible');
+      }
+    });
+  }, 100);
+}
+
+// Inițializează aplicația când DOM-ul este gata
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}
+
+// Handle page transitions and back button
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    initializeApp();
+  }
+});
+
+// Adaugă un mic delay pentru a asigura că totul este încărcat
+window.addEventListener('load', () => {
+  setTimeout(initializeApp, 50);
 });
