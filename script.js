@@ -323,18 +323,6 @@ function translatePage() {
   });
 
   document.documentElement.lang = currentLang;
-  
-  // Actualizează și atributele alt și title pentru SVG-uri dacă este necesar
-  updateSvgAccessibility();
-}
-
-function updateSvgAccessibility() {
-  const svgs = document.querySelectorAll('svg');
-  svgs.forEach(svg => {
-    if (!svg.getAttribute('aria-label')) {
-      svg.setAttribute('aria-hidden', 'true');
-    }
-  });
 }
 
 function setupLanguageToggle() {
@@ -342,42 +330,20 @@ function setupLanguageToggle() {
   if (!langToggle) return;
 
   langToggle.addEventListener('click', () => {
-    const langOptions = langToggle.querySelectorAll('.lang-option');
-
-    langOptions.forEach(option => {
-      option.classList.toggle('active');
-    });
-
     currentLang = currentLang === 'ro' ? 'en' : 'ro';
     translatePage();
     
     // Salvează preferința în localStorage
     localStorage.setItem('preferredLang', currentLang);
-  });
-}
-function resetLanguage() {
-  // Pentru debugging - resetează limba la română
-  localStorage.removeItem('preferredLang');
-  currentLang = 'ro';
-  translatePage();
-  
-  // Resetează butonul vizual
-  const langToggle = document.getElementById('langToggle');
-  if (langToggle) {
+    
+    // Actualizează butonul vizual
     const langOptions = langToggle.querySelectorAll('.lang-option');
     langOptions.forEach(option => {
-      option.classList.toggle('active', option.getAttribute('data-lang') === 'ro');
+      option.classList.toggle('active', option.getAttribute('data-lang') === currentLang);
     });
-  }
+  });
 }
 
-// Adaugă acest event listener pentru debugging
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'r' && e.ctrlKey) { // Apasă Ctrl+R pentru reset
-    resetLanguage();
-    alert('Limba a fost resetată la română!');
-  }
-});
 function setupScrollAnimations() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -415,26 +381,12 @@ function setupSmoothScroll() {
   });
 }
 
-function setupNavigation() {
-  // Highlight active navigation link
-  const navLinks = document.querySelectorAll('.nav-link');
-  const currentPage = window.location.pathname;
-  
-  navLinks.forEach(link => {
-    if (link.getAttribute('href') === currentPage) {
-      link.style.color = 'var(--primary)';
-      link.style.fontWeight = '600';
-    }
-  });
-}
-
 function setupStoreButtons() {
   const storeButtons = document.querySelectorAll('.store-button');
   
   storeButtons.forEach(button => {
     button.addEventListener('click', (e) => {
       e.preventDefault();
-      // Aici poți adăuga logica pentru redirecționare către App Store/Google Play
       alert('Link-urile către App Store și Google Play vor fi adăugate când aplicația va fi publicată.');
     });
   });
@@ -461,7 +413,6 @@ function initializeApp() {
   setupLanguageToggle();
   setupScrollAnimations();
   setupSmoothScroll();
-  setupNavigation();
   setupStoreButtons();
   translatePage();
   
@@ -478,21 +429,4 @@ function initializeApp() {
 }
 
 // Inițializează aplicația când DOM-ul este gata
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-  initializeApp();
-}
-
-// Handle page transitions and back button
-window.addEventListener('pageshow', (event) => {
-  if (event.persisted) {
-    initializeApp();
-  }
-});
-
-// Adaugă un mic delay pentru a asigura că totul este încărcat
-window.addEventListener('load', () => {
-  setTimeout(initializeApp, 50);
-
-});
+document.addEventListener('DOMContentLoaded', initializeApp);
