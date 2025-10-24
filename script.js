@@ -355,7 +355,29 @@ function setupLanguageToggle() {
     localStorage.setItem('preferredLang', currentLang);
   });
 }
+function resetLanguage() {
+  // Pentru debugging - resetează limba la română
+  localStorage.removeItem('preferredLang');
+  currentLang = 'ro';
+  translatePage();
+  
+  // Resetează butonul vizual
+  const langToggle = document.getElementById('langToggle');
+  if (langToggle) {
+    const langOptions = langToggle.querySelectorAll('.lang-option');
+    langOptions.forEach(option => {
+      option.classList.toggle('active', option.getAttribute('data-lang') === 'ro');
+    });
+  }
+}
 
+// Adaugă acest event listener pentru debugging
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'r' && e.ctrlKey) { // Apasă Ctrl+R pentru reset
+    resetLanguage();
+    alert('Limba a fost resetată la română!');
+  }
+});
 function setupScrollAnimations() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -472,4 +494,5 @@ window.addEventListener('pageshow', (event) => {
 // Adaugă un mic delay pentru a asigura că totul este încărcat
 window.addEventListener('load', () => {
   setTimeout(initializeApp, 50);
+
 });
