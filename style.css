@@ -649,3 +649,10 @@ main {
     font-size: 1.75rem;
   }
 }
+.store-soon {
+  font-size: 0.75rem;
+  color: #f59e0b;
+  font-weight: 600;
+  margin-top: 2px;
+  display: block;
+}
